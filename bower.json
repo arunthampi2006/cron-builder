@@ -2,9 +2,9 @@
   "name": "cron-builder",
   "main": "cron-builder.js",
   "version": "0.1.0",
-  "homepage": "https://github.com/srcclr/cron-builder",
+  "homepage": "https://github.com/arunthampi2006/cron-builder.git",
   "authors": [
-    "waneka <twwaneka@gmail.com>"
+    "arun thampi <arunthampi2006@gmail.com>"
   ],
   "description": "simple API for building cron expressions",
   "keywords": [

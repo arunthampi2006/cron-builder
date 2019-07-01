@@ -7,11 +7,13 @@ var CronValidator = (function() {
      * @const
      */
     var MeasureOfTimeMap = {
-            0: 'minute',
-            1: 'hour',
-            2: 'dayOfTheMonth',
-            3: 'month',
-            4: 'dayOfTheWeek'
+            0: 'second',
+            1: 'minute',
+            2: 'hour',
+            3: 'dayOfTheMonth',
+            4: 'month',
+            5: 'dayOfTheWeek',
+            6: 'year'
         },
         /**
          * contains every permissible 'measureOfTime' string constant
@@ -25,18 +27,20 @@ var CronValidator = (function() {
     /**
      * validates a given cron expression (object) for length, then calls validateValue on each value
      * @param {!{
+        second: Array.string,
         minute: Array.string,
         hour: Array.string,
         dayOfTheMonth: Array.string,
         month: Array.string,
         dayOfTheWeek: Array.string,
+        year: Array.string,
      * }} expression - rich object containing the state of the cron expression
      * @throws {Error} if expression contains more than 5 keys
      */
     var validateExpression = function(expression) {
         // don't care if it's less than 5, we'll just set those to the default '*'
-        if (Object.keys(expression).length > 5) {
-            throw new Error('Invalid cron expression; limited to 5 values.');
+        if (Object.keys(expression).length > 7) {
+            throw new Error('Invalid cron expression; limited to 7 values.');
         }
 
         for (var measureOfTime in expression) {
@@ -54,8 +58,8 @@ var CronValidator = (function() {
     validateString = function(expression) {
         var splitExpression = expression.split(' ');
 
-        if (splitExpression.length > 5) {
-            throw new Error('Invalid cron expression; limited to 5 values.');
+        if (splitExpression.length > 7) {
+            throw new Error('Invalid cron expression; limited to 7 values.');
         }
 
         for (var i = 0; i < splitExpression.length; i++) {
@@ -72,14 +76,16 @@ var CronValidator = (function() {
      */
     validateValue = function(measureOfTime, value) {
         var validatorObj = {
+                second:        {min: 0, max: 59},
                 minute:        {min: 0, max: 59},
                 hour:          {min: 0, max: 23},
                 dayOfTheMonth: {min: 1, max: 31},
                 month:         {min: 1, max: 12},
-                dayOfTheWeek:  {min: 0, max: 7}
+                dayOfTheWeek:  {min: 0, max: 7},
+                year:          {min: 0, max: 99}
             },
             range,
-            validChars = /^[0-9*-]/;
+            validChars = /^[0-9|A-Z*?-]/;
 
         if (!validatorObj[measureOfTime]) {
             throw new Error('Invalid measureOfTime; Valid options are: ' + MeasureOfTimeValues.join(', '));
@@ -129,8 +135,8 @@ var CronValidator = (function() {
  * @throws {Error} if the initialExpression is bogus
  * @constructor
  */
-var CronBuilder = (function() {
-    function CronBuilder(initialExpression) {
+cronBuilder = (function() {
+    function cronBuilder(initialExpression) {
         var splitExpression,
             expression;
 
@@ -141,19 +147,23 @@ var CronBuilder = (function() {
             // check to see if initial expression is valid
 
             expression = {
-                minute:        splitExpression[0] ? [splitExpression[0]] : DEFAULT_INTERVAL,
-                hour:          splitExpression[1] ? [splitExpression[1]] : DEFAULT_INTERVAL,
-                dayOfTheMonth: splitExpression[2] ? [splitExpression[2]] : DEFAULT_INTERVAL,
-                month:         splitExpression[3] ? [splitExpression[3]] : DEFAULT_INTERVAL,
-                dayOfTheWeek:  splitExpression[4] ? [splitExpression[4]] : DEFAULT_INTERVAL,
+                second:        splitExpression[0] ? [splitExpression[0]] : DEFAULT_INTERVAL,
+                minute:        splitExpression[1] ? [splitExpression[1]] : DEFAULT_INTERVAL,
+                hour:          splitExpression[2] ? [splitExpression[2]] : DEFAULT_INTERVAL,
+                dayOfTheMonth: splitExpression[3] ? [splitExpression[3]] : DEFAULT_INTERVAL,
+                month:         splitExpression[4] ? [splitExpression[4]] : DEFAULT_INTERVAL,
+                dayOfTheWeek:  splitExpression[5] ? [splitExpression[5]] : DEFAULT_INTERVAL,
+                year:          splitExpression[6] ? [splitExpression[6]] : DEFAULT_INTERVAL
             };
         } else {
             expression = {
+                second: DEFAULT_INTERVAL,
                 minute: DEFAULT_INTERVAL,
                 hour: DEFAULT_INTERVAL,
                 dayOfTheMonth: DEFAULT_INTERVAL,
                 month: DEFAULT_INTERVAL,
                 dayOfTheWeek: DEFAULT_INTERVAL,
+                year: DEFAULT_INTERVAL
             };
         }
 
@@ -163,11 +173,13 @@ var CronBuilder = (function() {
          */
         this.build = function () {
             return [
+                expression.second.join(','),
                 expression.minute.join(','),
                 expression.hour.join(','),
                 expression.dayOfTheMonth.join(','),
                 expression.month.join(','),
                 expression.dayOfTheWeek.join(','),
+                expression.year.join(','),
             ].join(' ');
         };
 
@@ -252,11 +264,13 @@ var CronBuilder = (function() {
         /**
          * Returns a rich object that describes the current state of the cron expression.
          * @returns {!{
+            second: Array.string,
             minute: Array.string,
             hour: Array.string,
             dayOfTheMonth: Array.string,
             month: Array.string,
             dayOfTheWeek: Array.string,
+            year: Array.string,
          * }}
          */
         this.getAll = function () {
@@ -266,11 +280,13 @@ var CronBuilder = (function() {
         /**
          * sets the state for the entire cron expression
          * @param {!{
+            second: Array.string,
             minute: Array.string,
             hour: Array.string,
             dayOfTheMonth: Array.string,
             month: Array.string,
             dayOfTheWeek: Array.string,
+            year: Array.string,
          * }} expToSet - the entirety of the cron expression.
          * @throws {Error} as usual
          */
@@ -281,7 +297,7 @@ var CronBuilder = (function() {
         };
     }
 
-    return CronBuilder;
+    return cronBuilder;
 }());
 
-module.exports = CronBuilder;
+module.exports = cronBuilder;
